@@ -1,0 +1,80 @@
+[tool.poetry]
+name = "llm_expr_equivalence"
+version = "0.1.0"
+description = ""
+authors = ["Alex Myasnikov <alex@asetlearning.com>"]
+readme = "README.md"
+
+[tool.poe.tasks]
+test = "pytest"
+typecheck = "mypy llm_expr_equivalence"
+lint = "ruff --fix"
+
+#[tool.poe.tasks.dev]
+#help = "Run development server, reloads on code changes"
+#shell = """
+#    hypercorn \
+#        -c python:ai_paper_grader.config.hypercorn.dev \
+#        ai_paper_grader.app:app
+#"""
+
+[tool.poetry.dependencies]
+python = "^3.12"
+#fastapi = "^0.109"
+pydantic = "^2"
+httpx = { extras = ["http2", "brotli"], version = "^0.26" }
+#sqlalchemy = "^2"
+#alembic = "^1"
+#psycopg = { extras = ["binary"], version = "^3" }
+pydantic-settings = "^2"
+#jinja2 = "^3"
+python-multipart = "^0.0.6"
+langchain = "^0.1"
+langchain-openai = "^0.0.5"
+#hypercorn = "^0.16"
+python-dotenv = "^1"
+openai = "^1.10"
+pymongo="^4.11"
+sympy="^1.13"
+latex2sympy2="^1.9.1"
+mathserver-client = {git = "ssh://git@gitlab.mathematiq.com:10009/gradarius/mathserver-client.git"}
+
+[tool.poetry.group.dev.dependencies]
+black = "^23"
+pytest-black-ng = "^0.4"
+pytest = "^7.4"
+mypy = "^1.8"
+pytest-cov = "^4"
+pre-commit = "^3"
+datamodel-code-generator = {version = "^0.25", extras = ["debug"]}
+ruff = "^0.1"
+pytest-asyncio = "^0.23"
+poethepoet = "^0.24"
+
+[tool.ruff]
+line-length = 120
+select = [
+    "E4", "E7", "E9",
+    # Black
+    "B",
+    # Pyflakes
+    "F",
+    # Quotes
+    "Q",
+    # Pycodestyle
+    "E",
+    "W",
+    "C",
+    # isort
+    "I"
+]
+show-fixes = true
+target-version = "py312"
+
+[tool.ruff.extend-per-file-ignores]
+# exclude generated files from checks
+#"llm_content_generator/schemas/*.py" = ["E501"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
