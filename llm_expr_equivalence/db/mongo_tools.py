@@ -1,5 +1,7 @@
 import contextlib
-from pymongo import MongoClient, ASCENDING
+from typing import Optional
+
+from pymongo import ASCENDING, MongoClient
 from pymongo.errors import ConnectionFailure
 
 __all__ = ["MongoConfig", "mongo_db"]
@@ -13,9 +15,9 @@ class MongoConfig:
         self,
         host: str = "localhost",
         port: int = 27017,
-        username: str = None,
-        password: str = None,
-        database_name: str = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        database_name: Optional[str] = None,
     ):
         self.host = host
         self.port = port

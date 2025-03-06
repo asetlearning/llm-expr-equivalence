@@ -1,6 +1,6 @@
-from httpx import URL, Timeout, Client
+from httpx import URL, Client, Timeout
 
-from llm_expr_equivalence.settings import get_settings, logger
+from llm_expr_equivalence.config.settings import get_settings, logger
 from llm_expr_equivalence.schemas.common import Trichotomy
 
 

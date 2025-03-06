@@ -1,10 +1,12 @@
-import httpx
 import re
 
-from llm_expr_equivalence.settings import get_settings
+import httpx
+
+from llm_expr_equivalence.config.settings import get_settings
+
 
 def remove_textcolor(text: str, q_param: str | None = None, replace: bool = False):
-    q = "\\\\textcolor{" + (q_param if q_param is not None else '(.*?)') + "}{(.*?)}"
+    q = "\\\\textcolor{" + (q_param if q_param is not None else "(.*?)") + "}{(.*?)}"
     d = re.search(q, text)
     if d is None:
         return None
@@ -12,11 +14,11 @@ def remove_textcolor(text: str, q_param: str | None = None, replace: bool = Fals
     pos_last = len(text)
     pos = d.end() + 1
     for c in text[d.end() + 1:]:
-        if c == '{':
+        if c == "{":
             np += 1
-        elif c == '}' and np > 0:
+        elif c == "}" and np > 0:
             np -= 1
-        elif c == '}' and np == 0:
+        elif c == "}" and np == 0:
             pos_last = pos
             break
         pos += 1

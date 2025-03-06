@@ -1,13 +1,13 @@
 import sympy
-from latex2sympy2 import latex2sympy, latex2latex
+from latex2sympy2 import latex2sympy
 
-from llm_expr_equivalence.settings import logger
-from llm_expr_equivalence.schemas.common import Trichotomy
+from llm_expr_equivalence.config.settings import logger
 from llm_expr_equivalence.db.mongo_tools import (
-    mongo_db,
     MongoConfig,
     create_index_if_not_exist,
+    mongo_db,
 )
+from llm_expr_equivalence.schemas.common import Trichotomy
 
 #  TODO: Optimize for distributed asynchronous calls
 
@@ -15,7 +15,7 @@ from llm_expr_equivalence.db.mongo_tools import (
 class SympyMatching:
 
     @staticmethod
-    def parse(expr: str) -> str | None:
+    def parse(expr: str):
         try:
             a = latex2sympy(expr)
 
