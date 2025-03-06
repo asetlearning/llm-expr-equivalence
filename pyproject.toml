@@ -10,17 +10,17 @@ test = "pytest"
 typecheck = "mypy llm_expr_equivalence"
 lint = "ruff --fix"
 
-#[tool.poe.tasks.dev]
-#help = "Run development server, reloads on code changes"
-#shell = """
-#    hypercorn \
-#        -c python:ai_paper_grader.config.hypercorn.dev \
-#        ai_paper_grader.app:app
-#"""
+[tool.poe.tasks.dev]
+help = "Run development server, reloads on code changes"
+shell = """
+    hypercorn \
+        -c python:llm_expr_equivalence.config.hypercorn.dev \
+        llm_expr_equivalence.serve_app:app
+"""
 
 [tool.poetry.dependencies]
 python = "^3.12"
-#fastapi = "^0.109"
+fastapi = "^0.109"
 pydantic = "^2"
 httpx = { extras = ["http2", "brotli"], version = "^0.26" }
 #sqlalchemy = "^2"
@@ -29,12 +29,14 @@ httpx = { extras = ["http2", "brotli"], version = "^0.26" }
 pydantic-settings = "^2"
 #jinja2 = "^3"
 python-multipart = "^0.0.6"
-langchain = "^0.1"
-langchain-openai = "^0.0.5"
-#hypercorn = "^0.16"
+langchain = "^0.3.18"
+langchain-community = "^0.3.18"
+langchain-openai = "^0.3.7"
+hypercorn = "^0.16"
 python-dotenv = "^1"
-openai = "^1.10"
-pymongo="^4.11"
+openai = "^1.65"
+pymongo = "^4.11"
+pandas = "^2.2.3"
 sympy="^1.13"
 latex2sympy2="^1.9.1"
 mathserver-client = {git = "ssh://git@gitlab.mathematiq.com:10009/gradarius/mathserver-client.git"}
