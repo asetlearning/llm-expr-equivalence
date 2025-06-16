@@ -1,10 +1,7 @@
 import json
-import logging
-import re
 import time
 from datetime import datetime
 
-import pandas as pd
 from langchain.schema import HumanMessage
 from langchain_openai import ChatOpenAI
 from openai import OpenAI
@@ -12,25 +9,8 @@ from openai import OpenAI
 from llm_expr_equivalence.config.settings import get_settings, logger
 from llm_expr_equivalence.db.data_loader import DataLoader
 from llm_expr_equivalence.equivalence_llm.equivalence_base import LLMEquivalenceBase
+from llm_expr_equivalence.equivalence_llm.prompts import equivalence_prompt
 from llm_expr_equivalence.schemas.common import Trichotomy
-
-
-def equivalence_prompt(expr1: str, expr2: str):
-    return f"""
-You are an experienced mathematician. Consider the concept of “equivalence” between two mathematical
-expressions or equations, meaning they share the same value or meaning and can be substituted for each
-other without altering the outcome of a larger equation.
-
-Examine the following expressions:
-  1. {expr1}
-  2. {expr2}
-
-Determine whether they are equivalent. Return your answer in structured JSON format with exactly one key-value
-pair where the key is `"result"` and the value is one of the following strings:
-- `"YES"` if they are equivalent
-- `"NO"` if they are not
-- `"DONTKNOW"` if you cannot decide
-"""
 
 
 class LLMEquivalenceOpenAI(LLMEquivalenceBase):
@@ -141,7 +121,7 @@ class LLMEquivalenceOpenAI(LLMEquivalenceBase):
             file=open(self.in_filename, "rb"),
             purpose="batch"
         )
-        logging.info(f"Uploading batch from {self.in_filename}: {self.batch_input_file} ...")
+        logger.info(f"Uploading batch from {self.in_filename}: {self.batch_input_file} ...")
 
         # create batch processing
         if self.batch_input_file is not None:
@@ -153,7 +133,7 @@ class LLMEquivalenceOpenAI(LLMEquivalenceBase):
                     "description": "test batch llm equivalence"
                 }
             )
-            logging.info(f"Batch processing created: {self.batch_process}")
+            logger.info(f"Batch processing created: {self.batch_process}")
 
     def get_batch_result(self) -> Trichotomy:
         """
@@ -183,40 +163,3 @@ class LLMEquivalenceOpenAI(LLMEquivalenceBase):
         self.out_filename = f"openai-batch-{self.started}-llm-result.jsonl"
         with open(self.out_filename, "w") as f:
             f.write(file_response.text)
-
-    def get_results_df(self, batch_file: str | None = None) -> pd.DataFrame:
-        """
-        Convert batch processing results into a pandas DataFrame.
-        Returns:
-            DataFrame containing expression hashes and their comparison results
-        Parses the output file and extracts results using regex.
-        Raises exception if batch processing is not completed.
-        """
-
-        if batch_file is not None:
-            out_filename = batch_file
-        elif self.out_filename is not None:
-            out_filename = self.out_filename
-        else:
-            raise Exception("Batch processing not completed yet")
-
-        logger.info(f"Parsing results from {out_filename} ...")
-        pattern = r'json\{"result":"(.*?)"\}'
-        llm_df = pd.DataFrame(columns=["exprs_hash", "result"])
-
-        with open(out_filename) as f:
-            for line in f.readlines():
-                llm_output = json.loads(line)
-                strip_out = llm_output["response"]["body"]["choices"][0]["message"]["content"].replace("\n",
-                                                                                                       "").replace(
-                    " ", "")
-
-                match = re.search(pattern, strip_out)
-                if match:
-                    llm_df = pd.concat([llm_df, pd.DataFrame(
-                        [{"exprs_hash": llm_output["custom_id"], "result": match.group(1)}])],
-                                       ignore_index=True)
-                else:
-                    logger.info(f"Could not extract result from {llm_output}")
-
-        return llm_df

@@ -23,6 +23,16 @@ class Settings(BaseSettings):
 
     openai_api_key: SecretStr = ""
 
+    # Google Cloud settings
+    gemini_api_key: SecretStr = ""
+    google_cloud_service_storage_creds_json: str = "llm-equivalence-storage-creds.json"
+    google_cloud_project: str = "llm-equivalence"
+    google_cloud_location: str = "us-central1"
+    google_vertex_client_secret_json: str = "llm-equivalence-client-secret.json"
+    google_vertex_access_token_json: str = "llm-equivalence-ai-token.json"
+    google_cloud_input_bucket: str = "llm-equivalence-batch"
+    google_cloud_output_bucket: str = "llm-equivalence-results"
+
     verbose: bool = False
     agent_verbose: bool = False
 
