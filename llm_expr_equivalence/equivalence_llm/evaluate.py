@@ -62,7 +62,7 @@ class LLMEvaluateResultsBase(ABC):
             if match:
                 return Trichotomy(match.group(1))
 
-        logger.info(f"Could not extract result from {content}")
+        logger.error(f"Could not extract result from {content}")
         return None
 
 

@@ -23,6 +23,8 @@ class Settings(BaseSettings):
 
     openai_api_key: SecretStr = ""
 
+    openai_api_api_base_url: str = ""
+
     # Google Cloud settings
     gemini_api_key: SecretStr = ""
     google_cloud_service_storage_creds_json: str = "llm-equivalence-storage-creds.json"
