@@ -11,11 +11,15 @@ Examine the following expressions:
   1. {expr1}
   2. {expr2}
 
-Determine whether they are equivalent. Return your answer in structured JSON format with exactly one key-value
-pair where the key is `"result"` and the value is one of the following strings:
+Determine whether they are equivalent. Solve internally with reasoning. Return ONLY the final answer
+ in structured JSON format with exactly one key-value pair where the key is `"result"` and
+ the value is one of the following strings:
 - `"YES"` if they are equivalent
 - `"NO"` if they are not
 - `"DONTKNOW"` if you cannot decide
+
+If you are about to run out of space,
+stop reasoning early and output the best final JSON answer you have.
 """
 
 

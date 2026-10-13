@@ -1,4 +1,5 @@
-from httpx import URL, Client, Timeout
+import backoff
+from httpx import URL, Client, ConnectError, HTTPStatusError, Timeout, TimeoutException, TransportError
 
 from llm_expr_equivalence.config.settings import get_settings, logger
 from llm_expr_equivalence.schemas.common import Trichotomy
@@ -21,6 +22,19 @@ class MathServer:
     def __del__(self):
         self.client.close()
 
+    @backoff.on_exception(
+        backoff.expo,  # exponential backoff
+        (TimeoutException, HTTPStatusError, ConnectError, TransportError),
+        max_tries=3,
+        base=5,
+        jitter=None,  # no jitter, pure exponential
+        on_backoff=lambda details: logger.info(
+            f"Backing off mathserver {details['tries']} times in {details['elapsed']} seconds..."),
+        giveup=lambda e: (
+            isinstance(e, HTTPStatusError)
+            and 400 <= e.response.status_code < 500  # don't retry on 4xx
+        ),
+    )
     def post(self, request: dict) -> dict:
         """
         Send arbitrary request to mathsever and returns its response in json
@@ -44,6 +58,10 @@ class MathServer:
             "params": {"lhs": lhs, "rhs": rhs},
         }
         response = self.post(request)
+        if "result" not in response:
+            logger.error(f"Mathserver response does not contain result for {lhs} -> {rhs}: {response}")
+            return Trichotomy.DONOTKNOW
+
         return response["result"]
 
     def get_does_match_reference(self, stud: str, ref: str) -> bool:
@@ -94,8 +112,12 @@ class MathServer:
             "method": "are_of_types",
             "params": {"expressions": exprs, "types": [t]},
         }
-        response = self.post(request)
-        if "result" in response:
-            return response["result"]
-        else:
+        try:
+            response = self.post(request)
+            if "result" in response:
+                return response["result"]
+            else:
+                return None
+        except Exception as e:
+            logger.error(f"Failed to call MathServer: {e}")
             return None

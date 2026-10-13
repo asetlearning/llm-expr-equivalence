@@ -7,8 +7,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 __all__ = ["get_settings", "logger"]
 
 
-logger = logging.getLogger("GRD")
-logging.basicConfig(level=logging.INFO)
+# Configure logging format with time, place (file:line:function), and action
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(name)s:%(levelname)s [%(filename)s:%(lineno)d:%(funcName)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
+# Suppress httpx info logs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
+logger = logging.getLogger("llm_equiv")
 
 
 class Settings(BaseSettings):
@@ -21,12 +30,12 @@ class Settings(BaseSettings):
     mathserver_url: str  = ""
     parser_url: str = ""
 
-    openai_api_key: SecretStr = ""
-
+    openai_api_key: SecretStr = SecretStr("")
     openai_api_api_base_url: str = ""
+    nebius_api_key: SecretStr = SecretStr("")
 
     # Google Cloud settings
-    gemini_api_key: SecretStr = ""
+    gemini_api_key: SecretStr = SecretStr("")
     google_cloud_service_storage_creds_json: str = "llm-equivalence-storage-creds.json"
     google_cloud_project: str = "llm-equivalence"
     google_cloud_location: str = "us-central1"
@@ -46,5 +55,5 @@ logger.info(settings.model_dump_json(indent=2))
 
 
 @lru_cache()
-def get_settings():
+def get_settings() -> Settings:
     return settings

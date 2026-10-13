@@ -1,8 +1,10 @@
 import re
 
+import backoff
 import httpx
+from httpx import ConnectError, HTTPStatusError, TimeoutException, TransportError
 
-from llm_expr_equivalence.config.settings import get_settings
+from llm_expr_equivalence.config.settings import get_settings, logger
 
 
 def remove_textcolor(text: str, q_param: str | None = None, replace: bool = False):
@@ -53,6 +55,18 @@ class ParseGrlServer:
             #            headers={"User-Agent": "MyApp/1.0"},  # Add default headers (optional)
         )
 
+    @backoff.on_exception(
+        backoff.constant,  # exponential backoff
+        (TimeoutException, HTTPStatusError, ConnectError, TransportError),
+        max_tries=1,
+        jitter=None,  # no jitter, pure exponential
+        on_backoff=lambda details: logger.info(
+            f"Backing off parser {details['tries']} times in {details['elapsed']} seconds..."),
+        giveup=lambda e: (
+            isinstance(e, HTTPStatusError)
+            and 400 <= e.response.status_code < 500  # don't retry on 4xx
+        ),
+    )
     def parse(self, grl: str) -> str:
         try:
             payload = {
@@ -71,7 +85,7 @@ class ParseGrlServer:
             if "result" in response_json:
                 if "textcolor" in response_json["result"]:
                     clean_result = remove_textcolor(response_json["result"])
-                    print(f"Remove textcolor {response_json["result"]} -> {clean_result}")
+                    logger.info(f"Remove textcolor {response_json['result']} -> {clean_result}")
                     return clean_result
 
                 return response_json["result"]
@@ -79,7 +93,7 @@ class ParseGrlServer:
             raise ParserSyntaxException(grl, response_json)
 
         except httpx.HTTPError as e:
-            print(f"An error occurred while parsing {grl}: {e}")
+            logger.error(f"An error occurred while parsing {grl}: {e}")
             raise e
 
     def __del__(self):
