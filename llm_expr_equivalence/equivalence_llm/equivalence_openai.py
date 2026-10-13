@@ -5,6 +5,7 @@ from datetime import datetime
 from langchain.schema import HumanMessage
 from langchain_openai import ChatOpenAI
 from openai import OpenAI
+from openai.types import Batch, FileObject
 
 from llm_expr_equivalence.config.settings import get_settings, logger
 from llm_expr_equivalence.db.data_loader import DataLoader
@@ -49,14 +50,14 @@ class LLMEquivalenceOpenAI(LLMEquivalenceBase):
         self.model_name = model_name
         self.client = ChatOpenAI(
             api_key=get_settings().openai_api_key,
-            model_name=model_name,
+            model=model_name,
             temperature=0,
         )
         self.batch_client = OpenAI(
-            api_key=get_settings().openai_api_key,
+            api_key=get_settings().openai_api_key.get_secret_value(),
         )
-        self.batch_input_file = None
-        self.batch_process = None
+        self.batch_input_file: FileObject | None = None
+        self.batch_process: Batch | None = None
         self.started: str | None = None
         self.in_filename: str | None = None
         self.out_filename: str | None = None
@@ -73,7 +74,7 @@ class LLMEquivalenceOpenAI(LLMEquivalenceBase):
 
         messages = [HumanMessage(content=equivalence_prompt(expr1, expr2))]
         response = self.client.invoke(messages)
-        return Trichotomy(response.content.strip())
+        return Trichotomy(str(response.content).strip())
 
     def to_batch_json(self, hash: str, expr1: str, expr2: str) -> dict:
         """
@@ -135,11 +136,9 @@ class LLMEquivalenceOpenAI(LLMEquivalenceBase):
             )
             logger.info(f"Batch processing created: {self.batch_process}")
 
-    def get_batch_result(self) -> Trichotomy:
+    def get_batch_result(self) -> None:
         """
         Retrieve and process results from a submitted batch job.
-        Returns:
-            Trichotomy value representing batch processing results
         Polls the API until batch processing is complete and saves results to file.
         Raises exception if batch processing fails.
         """
@@ -151,7 +150,8 @@ class LLMEquivalenceOpenAI(LLMEquivalenceBase):
         started = time.time()
         while batch.status not in ["expired", "completed"]:
             time.sleep(60)
-            print(f"\rWaiting: {int(time.time() - started)}", end="", flush=True)
+            elapsed = int(time.time() - started)
+            logger.info(f"Waiting for batch completion: {elapsed}s elapsed, status: {batch.status}")
             batch = self.batch_client.batches.retrieve(self.batch_process.id)
 
         logger.info(f"Batch completed: {batch}")

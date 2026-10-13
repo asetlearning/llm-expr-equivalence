@@ -169,3 +169,15 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+.idea
+
+#Data
+Data
+
+# Claude
+.claude
+
+# Security and privacy
+llm-equivalence-*.json
+google-batch-*.jsonl
+__marimo__/

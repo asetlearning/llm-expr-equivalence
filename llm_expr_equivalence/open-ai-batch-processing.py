@@ -1,4 +1,5 @@
 
+from llm_expr_equivalence.config.settings import logger
 from llm_expr_equivalence.db.data_loader import DataLoader
 from llm_expr_equivalence.equivalence_llm.evaluate import LLMEvaluateResultsOpenAI
 
@@ -15,7 +16,7 @@ def main():
 
 
     evaluate = LLMEvaluateResultsOpenAI("Data/openai/openai-batch-20250305-154500-llm-result.jsonl")
-    print(evaluate.evaluate(dataloader.load_df))
+    logger.info(f"Evaluation result: {evaluate.evaluate(dataloader.load_df)}")
 
 # Run the main function if the script is executed directly.
 if __name__ == "__main__":

@@ -223,7 +223,8 @@ class LLMEquivalenceBatchGemini(LLMEquivalenceBatchBase):
         ]
 
         while self.gcs_batch_job.state in IN_PROGRESS_STATES:
-            print(f"\rWaiting: {int(time.time() - started)}", end="", flush=True)
+            elapsed = int(time.time() - started)
+            logger.info(f"Waiting for batch completion: {elapsed}s elapsed, state: {self.gcs_batch_job.state}")
             time.sleep(10)
             self.gcs_batch_job = self.client.batches.get(name=self.gcs_batch_job.name)
 

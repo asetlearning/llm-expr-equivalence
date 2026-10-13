@@ -4,6 +4,8 @@ from typing import Optional
 from pymongo import ASCENDING, MongoClient
 from pymongo.errors import ConnectionFailure
 
+from llm_expr_equivalence.config.settings import logger
+
 __all__ = ["MongoConfig", "mongo_db"]
 
 class MongoConfig:
@@ -32,16 +34,16 @@ def mongo_db(cfg: MongoConfig):
        Connect to mongodb.
     """
     try:
-        client = MongoClient(host=cfg.host,
+        client: MongoClient = MongoClient(host=cfg.host,
                              port=cfg.port,
                              username=cfg.username,
                              password=cfg.password,
                              # ssl=cfg['mongo_ssl'],
                              # ssl_cert_reqs=ssl.CERT_NONE
                             )
-        the_db = client[cfg.database_name]
+        the_db = client.get_database(cfg.database_name)
     except ConnectionFailure as e:
-        print(f"Failed to connect to MongoDB: {e}")
+        logger.error(f"Failed to connect to MongoDB: {e}")
         raise
 
     try:
@@ -52,9 +54,9 @@ def mongo_db(cfg: MongoConfig):
 
 def create_index_if_not_exist(db, coll, index_name, field_name, is_unique):
     if index_name not in db[coll].index_information():
-        print(f"Index on {field_name} does not exist. Creating it.")
+        logger.info(f"Index on {field_name} does not exist. Creating it.")
         # Create the unique index on the `expr_has` field
         db[coll].create_index(
             [(field_name, ASCENDING)], name=index_name, unique=is_unique
         )
-        print(f"Created index {index_name} successfully.")
+        logger.info(f"Created index {index_name} successfully.")
